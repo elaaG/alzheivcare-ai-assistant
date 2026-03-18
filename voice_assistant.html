@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AlzheiCare — Assistant Vocal</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #f0ebe3;
+  --bg2:          #e8e1d7;
+  --surface:      #faf7f2;
+  --surface2:     #f2ede5;
+  --border:       #ddd6cb;
+  --text:         #2c2417;
+  --muted:        #9b8f82;
+  --soft:         #c4b8aa;
+  --accent:       #7c9e87;
+  --accent-dark:  #4a7057;
+  --accent-light: #e8f0eb;
+  --warm:         #c8856a;
+  --warm-light:   #f5ede9;
+  --user-bg:      #4a7057;
+  --user-text:    #f0ebe3;
+  --bot-bg:       #faf7f2;
+  --shadow:       0 4px 24px rgba(44,36,23,0.08);
+  --shadow-lg:    0 8px 40px rgba(44,36,23,0.14);
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 16px;
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(124,158,135,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(200,133,106,0.08) 0%, transparent 50%);
+}
+
+.shell {
+  width: 100%; max-width: 680px; height: 95vh;
+  display: flex; flex-direction: column;
+  border-radius: 28px; overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+
+.header {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 28px 16px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.header-top {
+  display: flex; align-items: center; gap: 14px;
+}
+
+.brand-icon {
+  width: 46px; height: 46px;
+  background: var(--accent); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(74,112,87,0.3);
+}
+
+.brand-icon svg { width: 24px; height: 24px; fill: white; }
+
+.brand-text h1 {
+  font-family: 'Lora', serif;
+  font-size: 19px; font-weight: 500;
+  letter-spacing: -0.3px; color: var(--text);
+}
+
+.brand-text p { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+
+.live-badge {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600;
+  color: var(--accent-dark); background: var(--accent-light);
+  padding: 4px 10px; border-radius: 99px;
+  border: 1px solid rgba(74,112,87,0.2);
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  background: var(--accent); border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.8); }
+}
+
+.config-strip {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+
+.cfg-item {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 5px 10px;
+}
+
+.cfg-label {
+  font-size: 10.5px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; white-space: nowrap;
+}
+
+.cfg-item input, .cfg-item select {
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px; font-weight: 500;
+  border: none; background: transparent;
+  color: var(--text); outline: none;
+}
+
+.cfg-item input[type="text"]   { width: 130px; }
+.cfg-item input[type="number"] { width: 44px; }
+
+.messages {
+  flex: 1; overflow-y: auto;
+  padding: 24px 28px;
+  display: flex; flex-direction: column; gap: 16px;
+  scroll-behavior: smooth;
+}
+
+.messages::-webkit-scrollbar { width: 4px; }
+.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; gap: 16px; padding: 40px 20px;
+  animation: fadeIn .6s ease;
+}
+
+.empty-orb {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light), var(--warm-light));
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.empty-orb svg { width: 36px; height: 36px; fill: var(--accent); }
+
+.empty-state h2 {
+  font-family: 'Lora', serif;
+  font-size: 20px; font-weight: 500;
+  color: var(--text); line-height: 1.3;
+}
+
+.empty-state p {
+  font-size: 14px; color: var(--muted);
+  max-width: 320px; line-height: 1.6;
+}
+
+.hint-pills {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-top: 6px;
+}
+
+.hint-pill {
+  font-size: 12.5px; padding: 6px 14px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 99px; color: var(--text);
+  cursor: pointer; transition: all .2s; font-weight: 500;
+}
+
+.hint-pill:hover {
+  background: var(--accent-light);
+  border-color: var(--accent); color: var(--accent-dark);
+}
+
+.row {
+  display: flex; gap: 10px; align-items: flex-end;
+  animation: fadeUp .3s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.row.user { flex-direction: row-reverse; }
+
+.av {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+
+.av.bot  { background: var(--accent-light); color: var(--accent-dark); }
+.av.user { background: var(--user-bg);      color: var(--user-text); }
+
+.bubble {
+  max-width: 76%; padding: 13px 17px;
+  border-radius: 18px; font-size: 15px;
+  line-height: 1.7; font-weight: 400; position: relative;
+}
+
+.bubble.bot {
+  background: var(--bot-bg); color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 5px;
+}
+
+.bubble.user {
+  background: var(--user-bg); color: var(--user-text);
+  border-bottom-right-radius: 5px;
+}
+
+.bubble.speaking {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(124,158,135,0.18);
+}
+
+.bubble .ts { font-size: 10.5px; opacity: .45; margin-top: 6px; display: block; }
+
+.speak-btn {
+  position: absolute; top: 8px; right: 10px;
+  width: 24px; height: 24px; border-radius: 50%;
+  border: none; background: var(--surface2);
+  color: var(--muted); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s; font-size: 12px;
+}
+
+.bubble.bot:hover .speak-btn { opacity: 1; }
+.speak-btn.active { opacity: 1; color: var(--accent); }
+
+.dots { display: flex; gap: 5px; padding: 4px 0; }
+.dots span {
+  width: 8px; height: 8px;
+  background: var(--soft); border-radius: 50%;
+  animation: bounce .9s infinite;
+}
+.dots span:nth-child(2) { animation-delay: .15s; }
+.dots span:nth-child(3) { animation-delay: .30s; }
+
+@keyframes bounce {
+  0%,60%,100% { transform: translateY(0); }
+  30%          { transform: translateY(-7px); }
+}
+
+.bottom {
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  padding: 20px 28px 24px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 16px;
+}
+
+.status-text {
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  letter-spacing: .02em; min-height: 18px;
+  transition: color .3s; text-align: center;
+}
+
+.status-text.listening { color: var(--warm); }
+.status-text.thinking  { color: var(--accent); }
+.status-text.speaking  { color: var(--accent-dark); }
+
+.orb-wrap { position: relative; width: 90px; height: 90px; }
+
+.orb-ring {
+  position: absolute; inset: -8px; border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0; transform: scale(1); transition: opacity .3s;
+}
+
+.orb-ring.active { opacity: 1; animation: ringPulse 1.4s ease-in-out infinite; }
+
+@keyframes ringPulse {
+  0%   { transform: scale(1);    opacity: .8; }
+  100% { transform: scale(1.35); opacity: 0;  }
+}
+
+.orb {
+  width: 90px; height: 90px; border-radius: 50%;
+  background: var(--accent); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(74,112,87,0.35);
+  transition: transform .15s, box-shadow .2s, background .3s;
+  position: relative; z-index: 1;
+}
+
+.orb:hover  { transform: scale(1.05); box-shadow: 0 6px 28px rgba(74,112,87,0.45); }
+.orb:active { transform: scale(.97); }
+
+.orb.listening {
+  background: var(--warm);
+  box-shadow: 0 4px 20px rgba(200,133,106,0.4);
+  animation: orbBreath 1.2s ease-in-out infinite;
+}
+
+.orb.thinking { background: var(--accent-dark); }
+
+@keyframes orbBreath {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.07); }
+}
+
+.orb svg { width: 34px; height: 34px; fill: white; }
+
+.wave-bars { display: none; gap: 4px; align-items: flex-end; height: 30px; }
+.wave-bars.show { display: flex; }
+
+.bar {
+  width: 5px; background: white; border-radius: 3px;
+  animation: wave 0.8s ease-in-out infinite;
+}
+.bar:nth-child(1) { animation-delay: 0s;   height: 10px; }
+.bar:nth-child(2) { animation-delay: .1s;  height: 20px; }
+.bar:nth-child(3) { animation-delay: .2s;  height: 28px; }
+.bar:nth-child(4) { animation-delay: .15s; height: 20px; }
+.bar:nth-child(5) { animation-delay: .05s; height: 10px; }
+
+@keyframes wave {
+  0%,100% { transform: scaleY(1); }
+  50%      { transform: scaleY(.4); }
+}
+
+.transcript-preview {
+  font-size: 13px; color: var(--muted); font-style: italic;
+  min-height: 18px; max-width: 440px;
+  text-align: center; line-height: 1.5;
+}
+
+.text-row {
+  display: flex; gap: 10px;
+  width: 100%; max-width: 500px;
+}
+
+.text-row textarea {
+  flex: 1; font-family: 'Nunito', sans-serif;
+  font-size: 14px; padding: 10px 14px;
+  border: 1px solid var(--border); border-radius: 12px;
+  resize: none; outline: none;
+  background: var(--surface); color: var(--text);
+  transition: border-color .2s; line-height: 1.5; max-height: 80px;
+}
+
+.text-row textarea:focus { border-color: var(--accent); }
+.text-row textarea::placeholder { color: var(--soft); }
+
+.send-btn {
+  width: 42px; height: 42px; border-radius: 12px;
+  border: none; background: var(--accent); color: white;
+  cursor: pointer; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+  transition: background .2s, transform .1s;
+  align-self: flex-end;
+}
+
+.send-btn:hover  { background: var(--accent-dark); }
+.send-btn:active { transform: scale(.95); }
+.send-btn svg    { width: 18px; height: 18px; }
+
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; max-width: 500px;
+}
+
+.divider-line { flex: 1; height: 1px; background: var(--border); }
+.divider-text { font-size: 11px; color: var(--soft); font-weight: 500; }
+
+.error-bar {
+  font-size: 12.5px; color: #9b4a3a;
+  background: var(--warm-light);
+  border: 1px solid rgba(200,133,106,.3);
+  padding: 8px 16px; border-radius: 10px;
+  display: none; text-align: center; max-width: 500px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M13 3a4 4 0 0 1 4 4 4 4 0 0 1-1.08 2.71C17.24 10.65 18 12.22 18 14a6 6 0 0 1-6 6 6 6 0 0 1-6-6c0-1.78.76-3.35 1.97-4.45A4 4 0 0 1 7 7a4 4 0 0 1 4-4h2m-1 2h-1a2 2 0 0 0-2 2 2 2 0 0 0 .93 1.68l.53.34-.23.6A4 4 0 0 0 8 14a4 4 0 0 0 4 4 4 4 0 0 0 4-4c0-1.41-.73-2.67-1.93-3.38l-.56-.32.23-.61A2 2 0 0 0 15 8a2 2 0 0 0-2-2h-1z"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>AlzheiCare</h1>
+        <p>Assistant vocal intelligent — Alzheimer care support</p>
+      </div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        En ligne
+      </div>
+    </div>
+
+    <div class="config-strip">
+      <div class="cfg-item">
+        <span class="cfg-label">Patient</span>
+        <input type="text" id="patientName" value="Fatima Ben Ali"/>
+      </div>
+      <div class="cfg-item">
+        <span class="cfg-label">Âge</span>
+        <input type="number" id="patientAge" value="74" min="50" max="100"/>
+      </div>
+      <div class="cfg-item">
+        <span class="cfg-label">Stade</span>
+        <select id="stage">
+          <option value="0">Léger</option>
+          <option value="1">Modéré</option>
+          <option value="2">Sévère</option>
+        </select>
+      </div>
+      <div class="cfg-item">
+        <span class="cfg-label">Rôle</span>
+        <select id="userRole">
+          <option value="caregiver">Aidant</option>
+          <option value="doctor">Médecin</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-orb">
+        <svg viewBox="0 0 24 24"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+      </div>
+      <h2>Bonjour, je suis là pour vous aider</h2>
+      <p>Appuyez sur le micro et parlez, ou tapez votre question. Je réponds en voix et en texte.</p>
+      <div class="hint-pills">
+        <div class="hint-pill" onclick="sendText('Ma mère répète les mêmes questions. Est-ce normal ?')">Répétition des questions</div>
+        <div class="hint-pill" onclick="sendText('Comment gérer les médicaments ?')">Médicaments</div>
+        <div class="hint-pill" onclick="sendText('Quels jeux sont bons pour stimuler la mémoire ?')">Stimulation cognitive</div>
+        <div class="hint-pill" onclick="sendText('Comment rester calme en tant qu\'aidant ?')">Conseils aidant</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="status-text" id="statusText">Appuyez sur le micro pour parler</div>
+
+    <div class="orb-wrap">
+      <div class="orb-ring" id="orbRing"></div>
+      <button class="orb" id="orb" onclick="toggleListening()" aria-label="Démarrer l'écoute">
+        <svg id="iconMic" viewBox="0 0 24 24"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        <div class="wave-bars" id="waveBars">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          <div class="bar"></div><div class="bar"></div>
+        </div>
+      </button>
+    </div>
+
+    <div class="transcript-preview" id="transcriptPreview"></div>
+    <div class="error-bar" id="errorBar"></div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">ou tapez</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="text-row">
+      <textarea id="textInput" rows="1" placeholder="Écrivez votre question ici…"></textarea>
+      <button class="send-btn" onclick="sendFromTextInput()" aria-label="Envoyer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+<script>
+const API_URL = 'http://localhost:8000/chat';
+let history     = [];
+let recognition = null;
+let isListening = false;
+let isBusy      = false;
+let currentUtter = null;
+
+const messagesEl   = document.getElementById('messages');
+const emptyStateEl = document.getElementById('emptyState');
+const orbEl        = document.getElementById('orb');
+const orbRingEl    = document.getElementById('orbRing');
+const iconMicEl    = document.getElementById('iconMic');
+const waveBarsEl   = document.getElementById('waveBars');
+const statusEl     = document.getElementById('statusText');
+const transcriptEl = document.getElementById('transcriptPreview');
+const errorBarEl   = document.getElementById('errorBar');
+const textInputEl  = document.getElementById('textInput');
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous     = false;
+  recognition.interimResults = true;
+  recognition.lang           = 'fr-FR';
+
+  recognition.onstart = () => {
+    isListening = true;
+    setOrbState('listening');
+    statusEl.textContent = 'Je vous écoute…';
+    statusEl.className   = 'status-text listening';
+    transcriptEl.textContent = '';
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t; else interim += t;
+    }
+    transcriptEl.textContent = final || interim;
+    if (final) { recognition.stop(); sendText(final.trim()); }
+  };
+
+  recognition.onerror = (e) => {
+    isListening = false; setOrbState('idle'); setStatus('idle');
+    if (e.error === 'no-speech')    showError('Aucune voix détectée. Réessayez.');
+    if (e.error === 'not-allowed')  showError('Microphone non autorisé. Vérifiez les permissions.');
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    if (!isBusy) { setOrbState('idle'); setStatus('idle'); }
+  };
+} else {
+  showError('Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome.');
+}
+
+function setOrbState(state) {
+  orbEl.className          = 'orb';
+  iconMicEl.style.display  = 'block';
+  waveBarsEl.className     = 'wave-bars';
+  orbRingEl.className      = 'orb-ring';
+  if (state === 'listening') {
+    orbEl.classList.add('listening');
+    iconMicEl.style.display = 'none';
+    waveBarsEl.classList.add('show');
+    orbRingEl.classList.add('active');
+  } else if (state === 'thinking') {
+    orbEl.classList.add('thinking');
+  }
+}
+
+function setStatus(state) {
+  const map = {
+    idle:      { text: 'Appuyez sur le micro pour parler', cls: '' },
+    listening: { text: 'Je vous écoute…',                 cls: 'listening' },
+    thinking:  { text: 'Je réfléchis…',                   cls: 'thinking' },
+    speaking:  { text: 'Je parle…',                        cls: 'speaking' },
+  };
+  const s = map[state] || map.idle;
+  statusEl.textContent = s.text;
+  statusEl.className   = 'status-text ' + s.cls;
+}
+
+function toggleListening() {
+  if (isBusy) {
+    if (currentUtter) { speechSynthesis.cancel(); isBusy = false; setOrbState('idle'); setStatus('idle'); }
+    return;
+  }
+  if (!recognition) return;
+  if (isListening) recognition.stop();
+  else try { recognition.start(); } catch(e) {}
+}
+
+function getConfig() {
+  return {
+    patient_name: document.getElementById('patientName').value || 'Patient',
+    patient_age:  parseInt(document.getElementById('patientAge').value) || 70,
+    stage:        parseInt(document.getElementById('stage').value),
+    user_role:    document.getElementById('userRole').value,
+  };
+}
+
+async function sendText(text) {
+  if (!text || isBusy) return;
+  isBusy = true;
+  if (emptyStateEl && emptyStateEl.parentNode) emptyStateEl.remove();
+  addBubble('user', text);
+  transcriptEl.textContent = '';
+  setOrbState('thinking');
+  setStatus('thinking');
+  const typingRow = showTyping();
+  const cfg = getConfig();
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, ...cfg, history })
+    });
+    if (!res.ok) throw new Error();
+    const data  = await res.json();
+    const reply = data.reply;
+    typingRow.remove();
+    const botBubble = addBubble('bot', reply);
+    history.push({ role: 'user', content: text });
+    history.push({ role: 'assistant', content: reply });
+    if (history.length > 20) history = history.slice(-20);
+    speak(reply, botBubble);
+  } catch {
+    typingRow.remove();
+    showError('Impossible de contacter le service IA. Vérifiez que main.py tourne sur le port 8000.');
+    setOrbState('idle'); setStatus('idle'); isBusy = false;
+  }
+}
+
+function speak(text, bubbleEl) {
+  if (!window.speechSynthesis) { isBusy = false; setOrbState('idle'); setStatus('idle'); return; }
+  const cleanText = text.replace(/⚠️/g, '').trim();
+  const utter = new SpeechSynthesisUtterance(cleanText);
+  currentUtter = utter;
+  const voices  = speechSynthesis.getVoices();
+  const frVoice = voices.find(v => v.lang.startsWith('fr')) || voices[0];
+  if (frVoice) utter.voice = frVoice;
+  utter.rate = 0.88; utter.pitch = 1.0; utter.volume = 1.0;
+  setStatus('speaking');
+  utter.onstart = () => {
+    if (bubbleEl) bubbleEl.classList.add('speaking');
+    const btn = bubbleEl?.querySelector('.speak-btn');
+    if (btn) btn.classList.add('active');
+  };
+  utter.onend = () => {
+    if (bubbleEl) bubbleEl.classList.remove('speaking');
+    const btn = bubbleEl?.querySelector('.speak-btn');
+    if (btn) btn.classList.remove('active');
+    isBusy = false; currentUtter = null;
+    setOrbState('idle'); setStatus('idle');
+  };
+  utter.onerror = () => { isBusy = false; currentUtter = null; setOrbState('idle'); setStatus('idle'); };
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+
+function addBubble(role, text) {
+  const row = document.createElement('div');
+  row.className = `row ${role}`;
+  const av = document.createElement('div');
+  av.className = `av ${role}`;
+  av.textContent = role === 'user' ? 'Vous' : 'IA';
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}`;
+  bubble.innerHTML = text.replace(/\n/g, '<br/>');
+  if (role === 'bot') {
+    const btn = document.createElement('button');
+    btn.className = 'speak-btn';
+    btn.title = 'Lire à voix haute';
+    btn.innerHTML = '🔊';
+    btn.onclick = (e) => { e.stopPropagation(); speechSynthesis.cancel(); speak(text, bubble); };
+    bubble.appendChild(btn);
+  }
+  const ts = document.createElement('span');
+  ts.className = 'ts';
+  ts.textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  bubble.appendChild(ts);
+  row.appendChild(av);
+  row.appendChild(bubble);
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return bubble;
+}
+
+function showTyping() {
+  const row = document.createElement('div');
+  row.className = 'row bot';
+  const av = document.createElement('div');
+  av.className = 'av bot'; av.textContent = 'IA';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble bot';
+  bubble.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  row.appendChild(av); row.appendChild(bubble);
+  messagesEl.appendChild(row);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return row;
+}
+
+function sendFromTextInput() {
+  const text = textInputEl.value.trim();
+  if (!text) return;
+  textInputEl.value = ''; textInputEl.style.height = 'auto';
+  sendText(text);
+}
+
+textInputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFromTextInput(); }
+});
+
+textInputEl.addEventListener('input', () => {
+  textInputEl.style.height = 'auto';
+  textInputEl.style.height = Math.min(textInputEl.scrollHeight, 80) + 'px';
+});
+
+function showError(msg) {
+  errorBarEl.textContent = msg;
+  errorBarEl.style.display = 'block';
+  setTimeout(() => errorBarEl.style.display = 'none', 6000);
+}
+
+speechSynthesis.onvoiceschanged = () => { speechSynthesis.getVoices(); };
+</script>
+</body>
+</html>
