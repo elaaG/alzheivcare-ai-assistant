@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
 import os
+import io
+from fastapi import UploadFile, File
 
 
 app = FastAPI(title="AlzheiCare AI Assistant")
@@ -138,7 +140,7 @@ async def chat(req: ChatRequest):
 
     try:
         response = client.chat.completions.create(
-            model="llama4-maverick-17b-128e-instruct",
+           model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.4,    
             max_tokens=600,
@@ -150,7 +152,17 @@ async def chat(req: ChatRequest):
 
     return ChatResponse(reply=reply)
 
-
+@app.post("/transcribe")
+async def transcribe(audio: UploadFile = File(...)):
+    
+    audio_bytes = await audio.read()
+    
+    transcription = client.audio.transcriptions.create(
+        model="whisper-large-v3",   
+        file=(audio.filename, audio_bytes, audio.content_type)
+    )
+    
+    return { "text": transcription.text }
 
 @app.get("/health")
 async def health():
